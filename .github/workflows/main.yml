@@ -9,19 +9,29 @@ jobs:
   update-vestaboard:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v2
-
+      
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: '3.x'
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install requests
 
-      - name: Run Python script
-        run: python main.py
+      - name: Fetch all launch information
+        run: |
+          python main.py fetch-launches
+          echo "::set-output name=message-layout::$(cat message_layout.json)"
+      
+      - name: Save message layout array
+        run: echo '${{ toJson(steps.create-message-layout.outputs.message-layout) }}' > message_layout.json
+      
+      - name: Send message to Vestaboard
+        run: python main.py send-to-vestaboard
         env:
-          SANITY_API_URL: ${{ secrets.SANITY_API_URL }}
           VESTABOARD_API_KEY: ${{ secrets.VESTABOARD_API_KEY }}
+      
+      - name: Print message layout array
+        run: cat message_layout.json
