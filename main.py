@@ -1,55 +1,74 @@
 import requests
+import json
+import datetime
 
-def update_vestaboard():
-    api_url = "YOUR_SANITY_API_URL"
-    vestaboard_api_key = "7f858a37+fa4b+442b+ac93+df153b0acb25"
+# Environment variables (set these in your GitHub Secrets)
+SANITY_API_URL = 'YOUR_SANITY_API_URL'  # URL that produces all launch information
+VESTABOARD_API_KEY = 'YOUR_VESTABOARD_API_KEY'
 
-    response = requests.get(api_url)
-    data = response.json()
-    launch_description = data['launchMiniDescription']
+# Function to fetch all launch information from Sanity
+def fetch_all_launches():
+    response = requests.get(SANITY_API_URL)
+    if response.status_code == 200:
+        return response.json()['result']
+    else:
+        print("Failed to fetch data from Sanity API")
+        return []
 
-    # Prepare the Vestaboard message with yellow tile
-    lines = [['' for _ in range(22)] for _ in range(6)]
-    words = launch_description.split()
-    line_index, char_index = 0, 0
+# Function to identify the most recently created launch
+def get_most_recent_launch(launches):
+    if not launches:
+        return None
+    most_recent_launch = max(launches, key=lambda x: x['_createdAt'])
+    return most_recent_launch
 
-    for word in words:
-        if char_index + len(word) <= 22:
-            for char in word:
-                lines[line_index][char_index] = char
-                char_index += 1
-            lines[line_index][char_index] = ' '
-            char_index += 1
-        else:
-            line_index += 1
-            char_index = 0
-            for char in word:
-                lines[line_index][char_index] = char
-                char_index += 1
-            lines[line_index][char_index] = ' '
-            char_index += 1
+# Function to format the launch description for Vestaboard
+def format_launch_description(launch):
+    launch_description = launch.get('launchMiniDescription', 'No description available')
+    return launch_description
 
-    # Convert to Vestaboard character codes
-    char_map = {chr(i): i - 96 for i in range(97, 123)}
-    char_map.update({' ': 0, '!': 59, '"': 60, '#': 61, '$': 62, '%': 63, '&': 64})
+# Function to create the Vestaboard message layout
+def create_vestaboard_message(description):
+    # Initialize the board with empty values
+    message_layout = [[0 for _ in range(22)] for _ in range(6)]
+
+    # Center-align and left-align the description on the board
+    lines = description.split('\n')
     for i, line in enumerate(lines):
-        for j, char in enumerate(line):
-            if char in char_map:
-                lines[i][j] = char_map[char]
-            else:
-                lines[i][j] = 0  # Default to empty space
+        if i < 6:
+            line_chars = [ord(char) - 32 for char in line]  # Convert characters to Vestaboard codes
+            line_length = len(line_chars)
+            start_index = (22 - line_length) // 2  # Center-align
+            message_layout[i][start_index:start_index + line_length] = line_chars
 
-    # Add the yellow tile in the bottom-right corner
-    lines[5][21] = 65
+    # Add yellow tile in the bottom-right-hand corner (character code 65)
+    message_layout[-1][-1] = 65
 
-    # Send to Vestaboard API
-    vestaboard_url = "https://rw.vestaboard.com/"
+    return message_layout
+
+# Function to send the message to Vestaboard
+def send_to_vestaboard(message_layout):
+    url = 'https://rw.vestaboard.com/'
     headers = {
-        "X-Vestaboard-Read-Write-Key": vestaboard_api_key,
-        "Content-Type": "application/json"
+        'X-Vestaboard-Read-Write-Key': VESTABOARD_API_KEY,
+        'Content-Type': 'application/json'
     }
-    requests.post(vestaboard_url, json=lines, headers=headers)
-    return "Vestaboard updated successfully"
+    data = json.dumps(message_layout)
+    response = requests.post(url, headers=headers, data=data)
+    if response.status_code == 200:
+        print("Message sent to Vestaboard successfully!")
+    else:
+        print("Failed to send message to Vestaboard")
+        print(response.text)
 
+# Main script execution
 if __name__ == "__main__":
-    print(update_vestaboard())
+    launches = fetch_all_launches()
+    most_recent_launch = get_most_recent_launch(launches)
+    if most_recent_launch:
+        description = format_launch_description(most_recent_launch)
+        message_layout = create_vestaboard_message(description)
+        send_to_vestaboard(message_layout)
+    else:
+        print("No launch data available.")
+
