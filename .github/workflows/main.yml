@@ -26,12 +26,6 @@ jobs:
           SANITY_API_URL: ${{ secrets.SANITY_API_URL }}
 
       - name: Send message to Vestaboard
-        run: |
-          python main.py send-to-vestaboard
-          echo "Message sent to Vestaboard:" > output.txt
-          cat message_layout.json >> output.txt
+        run: python main.py send-to-vestaboard
         env:
           VESTABOARD_API_KEY: ${{ secrets.VESTABOARD_API_KEY }}
-
-      - name: Print output
-        run: cat output.txt
