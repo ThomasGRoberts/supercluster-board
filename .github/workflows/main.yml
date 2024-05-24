@@ -10,35 +10,30 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3  # Update to version 3
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v3  # Update to version 3
-        with:
-          node-version: '14'  # Use Node.js 14 (compatible with Node.js 20)
+        uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3  # Update to version 3
         with:
           python-version: '3.x'
 
       - name: Install dependencies
         run: |
-          npm install -g yarn
-          yarn install
+          python -m pip install --upgrade pip
+          pip install requests
 
       - name: Fetch all launch information
-        run: |
-          python main.py fetch-launches
-          echo "::set-output name=message-layout::$(cat message_layout.json)"
-      
-      - name: Save message layout array
-        run: echo '${{ toJson(steps.create-message-layout.outputs.message-layout) }}' > message_layout.json
-      
+        run: python main.py fetch-launches
+        env:
+          SANITY_API_URL: ${{ secrets.SANITY_API_URL }}
+
       - name: Send message to Vestaboard
-        run: python main.py send-to-vestaboard
+        run: |
+          python main.py send-to-vestaboard
+          echo "Message sent to Vestaboard:" > output.txt
+          cat message_layout.json >> output.txt
         env:
           VESTABOARD_API_KEY: ${{ secrets.VESTABOARD_API_KEY }}
-      
-      - name: Print message layout array
-        run: cat message_layout.json
+
+      - name: Print output
+        run: cat output.txt
