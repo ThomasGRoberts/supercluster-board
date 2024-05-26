@@ -1,10 +1,10 @@
 import requests
 import json
-import os
+import datetime
 
 # Environment variables (set these in your GitHub Secrets)
-SANITY_API_URL = os.getenv('SANITY_API_URL')
-VESTABOARD_API_KEY = os.getenv('VESTABOARD_API_KEY')
+SANITY_API_URL = 'YOUR_SANITY_API_URL'  # URL that produces all launch information
+VESTABOARD_API_KEY = 'YOUR_VESTABOARD_API_KEY'
 
 # Function to fetch all launch information from Sanity
 def fetch_all_launches():
@@ -34,9 +34,9 @@ def create_vestaboard_message(description):
 
     # Split description into lines and limit to 6 lines
     lines = description.split('\n')[:6]
-    
+
     for i, line in enumerate(lines):
-        line_chars = [ord(char) - 32 for char in line]  # Convert characters to Vestaboard codes
+        line_chars = [ord(char) - 32 for char in line if 0 <= ord(char) - 32 <= 71]  # Ensure valid range
         line_length = len(line_chars)
         if line_length > 22:
             line_chars = line_chars[:22]  # Truncate if longer than 22 chars
@@ -63,7 +63,7 @@ def send_to_vestaboard(message_layout):
         print("Message sent to Vestaboard successfully!")
     else:
         print("Failed to send message to Vestaboard")
-        print(f"Response: {response.text}")
+        print("Response:", response.text)
 
 # Main script execution
 if __name__ == "__main__":
@@ -71,6 +71,7 @@ if __name__ == "__main__":
     most_recent_launch = get_most_recent_launch(launches)
     if most_recent_launch:
         description = format_launch_description(most_recent_launch)
+        print(f"Launch description: {description}")  # Print the launch description for debugging
         message_layout = create_vestaboard_message(description)
         print(f"Message layout: {message_layout}")  # Print the message layout for debugging
         send_to_vestaboard(message_layout)
