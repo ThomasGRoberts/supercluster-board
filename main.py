@@ -1,10 +1,8 @@
 import requests
 import json
-import datetime
-
-# Environment variables (these should be set in your GitHub Secrets)
 import os
 
+# Environment variables (these should be set in your GitHub Secrets)
 SANITY_API_URL = os.getenv('SANITY_API_URL')
 VESTABOARD_API_KEY = os.getenv('VESTABOARD_API_KEY')
 
@@ -13,7 +11,8 @@ def fetch_all_launches():
     response = requests.get(SANITY_API_URL)
     if response.status_code == 200:
         print("Successfully fetched data from Sanity API")
-        print("API Response:", response.text)  # Print the raw API response for debugging
+        # Print a snippet of the API response for debugging
+        print("API Response Snippet:", response.text[:200])  
         return response.json()['result']
     else:
         print("Failed to fetch data from Sanity API")
@@ -28,7 +27,8 @@ def get_most_recent_launch(launches):
 
 # Function to format the launch description for Vestaboard
 def format_launch_description(launch):
-    launch_description = launch.get('launchMiniDescription', 'No description available')
+    launch_info = launch.get('launchInfo', {})
+    launch_description = launch_info.get('launchMiniDescription', 'No description available')
     return launch_description
 
 # Function to create the Vestaboard message layout
@@ -70,17 +70,16 @@ def send_to_vestaboard(message_layout):
         print("Response:", response.text)
 
 # Main script execution
-if __name__ == "__main__":
-    if not SANITY_API_URL or not VESTABOARD_API_KEY:
-        print("Environment variables SANITY_API_URL and VESTABOARD_API_KEY must be set")
+if not SANITY_API_URL or not VESTABOARD_API_KEY:
+    print("Environment variables SANITY_API_URL and VESTABOARD_API_KEY must be set")
+else:
+    launches = fetch_all_launches()
+    most_recent_launch = get_most_recent_launch(launches)
+    if most_recent_launch:
+        description = format_launch_description(most_recent_launch)
+        print(f"Launch description: {description}")  # Print the launch description for debugging
+        message_layout = create_vestaboard_message(description)
+        print(f"Message layout: {message_layout}")  # Print the message layout for debugging
+        send_to_vestaboard(message_layout)
     else:
-        launches = fetch_all_launches()
-        most_recent_launch = get_most_recent_launch(launches)
-        if most_recent_launch:
-            description = format_launch_description(most_recent_launch)
-            print(f"Launch description: {description}")  # Print the launch description for debugging
-            message_layout = create_vestaboard_message(description)
-            print(f"Message layout: {message_layout}")  # Print the message layout for debugging
-            send_to_vestaboard(message_layout)
-        else:
-            print("No launch data available.")
+        print("No launch data available.")
