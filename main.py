@@ -1,21 +1,22 @@
 import os
 import requests
 import json
+import datetime
 
-# Environment variables
+# Retrieve environment variables (set these in your GitHub Secrets)
 SANITY_API_URL = os.getenv('SANITY_API_URL')
 VESTABOARD_API_KEY = os.getenv('VESTABOARD_API_KEY')
 
-# Character dictionary for Vestaboard
+# Character codes for Vestaboard
 CHARACTER_CODES = {
     'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'F': 6, 'G': 7, 'H': 8, 'I': 9, 'J': 10,
-    'K': 11, 'L': 12, 'M': 13, 'N': 14, 'O': 15, 'P': 16, 'Q': 17, 'R': 18, 'S': 19, 'T': 20,
-    'U': 21, 'V': 22, 'W': 23, 'X': 24, 'Y': 25, 'Z': 26,
+    'K': 11, 'L': 12, 'M': 13, 'N': 14, 'O': 15, 'P': 16, 'Q': 17, 'R': 18, 'S': 19,
+    'T': 20, 'U': 21, 'V': 22, 'W': 23, 'X': 24, 'Y': 25, 'Z': 26,
     '1': 27, '2': 28, '3': 29, '4': 30, '5': 31, '6': 32, '7': 33, '8': 34, '9': 35, '0': 36,
     '!': 37, '@': 38, '#': 39, '$': 40, '(': 41, ')': 42, '-': 44, '+': 46, '&': 47, '=': 48,
     ';': 49, ':': 50, "'": 52, '"': 53, '%': 54, ',': 55, '.': 56, '/': 59, '?': 60, '°': 62,
-    'Red': 63, 'Orange': 64, 'Yellow': 65, 'Green': 66, 'Blue': 67, 'Violet': 68, 'White': 69,
-    'Black': 70, 'Filled': 71
+    'Red': 63, 'Orange': 64, 'Yellow': 65, 'Green': 66, 'Blue': 67, 'Violet': 68, 'White': 69, 'Black': 70,
+    'Filled': 71
 }
 
 # Function to fetch all launch information from Sanity
@@ -46,14 +47,14 @@ def create_vestaboard_message(description):
 
     # Center-align and vertically align the description on the board
     lines = description.split('\n')
-    start_row = (6 - len(lines)) // 2
+    num_lines = len(lines)
+    start_row = (6 - num_lines) // 2
     for i, line in enumerate(lines):
         if i < 6:
             line_chars = [CHARACTER_CODES.get(char, 0) for char in line]  # Convert characters to Vestaboard codes
             line_length = len(line_chars)
-            start_col = (22 - line_length) // 2  # Center-align
-            print(f"Line {i+1}: {line_chars}, Length: {line_length}, Start Column: {start_col}")
-            message_layout[start_row + i][start_col:start_col + line_length] = line_chars
+            start_index = (22 - line_length) // 2  # Center-align
+            message_layout[start_row + i][start_index:start_index + line_length] = line_chars
 
     return message_layout
 
@@ -70,13 +71,15 @@ def send_to_vestaboard(message_layout):
         print("Message sent to Vestaboard successfully!")
     else:
         print("Failed to send message to Vestaboard")
-        print("Response:", response.text)
+        print(response.text)
 
 # Main script execution
 if __name__ == "__main__":
     launches = fetch_all_launches()
-    if launches:
-        most_recent_launch = get_most_recent_launch(launches)
-        if most_recent_launch:
-            description = format_launch_description(most_recent_launch)
-            message_layout
+    most_recent_launch = get_most_recent_launch(launches)
+    if most_recent_launch:
+        description = format_launch_description(most_recent_launch)
+        message_layout = create_vestaboard_message(description)
+        send_to_vestaboard(message_layout)
+    else:
+        print("No launch data available.")
