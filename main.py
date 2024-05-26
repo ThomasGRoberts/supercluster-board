@@ -9,11 +9,12 @@ VESTABOARD_API_KEY = os.getenv('VESTABOARD_API_KEY')
 
 # Function to fetch all launch information from Sanity
 def fetch_all_launches():
-    response = requests.get(SANITY_API_URL)
-    if response.status_code == 200:
-        return response.json()['result']
-    else:
-        print("Failed to fetch data from Sanity API")
+    try:
+        response = requests.get(SANITY_API_URL)
+        response.raise_for_status()
+        return response.json().get('result', [])
+    except requests.RequestException as e:
+        print(f"Error fetching data from Sanity API: {e}")
         return []
 
 # Function to identify the most recently created launch
@@ -55,21 +56,25 @@ def send_to_vestaboard(message_layout):
         'Content-Type': 'application/json'
     }
     data = json.dumps(message_layout)
-    response = requests.post(url, headers=headers, data=data)
-    if response.status_code == 200:
+    try:
+        response = requests.post(url, headers=headers, data=data)
+        response.raise_for_status()
         print("Message sent to Vestaboard successfully!")
-    else:
-        print("Failed to send message to Vestaboard")
+    except requests.RequestException as e:
+        print(f"Failed to send message to Vestaboard: {e}")
         print(response.text)
 
 # Main script execution
 if __name__ == "__main__":
     launches = fetch_all_launches()
+    print(f"Fetched launches: {launches}")
     most_recent_launch = get_most_recent_launch(launches)
+    print(f"Most recent launch: {most_recent_launch}")
     if most_recent_launch:
         description = format_launch_description(most_recent_launch)
+        print(f"Formatted description: {description}")
         message_layout = create_vestaboard_message(description)
+        print(f"Message layout: {message_layout}")
         send_to_vestaboard(message_layout)
     else:
         print("No launch data available.")
-
