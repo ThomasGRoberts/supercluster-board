@@ -1,10 +1,10 @@
 import requests
 import json
-import datetime
+import os
 
 # Environment variables (set these in your GitHub Secrets)
-SANITY_API_URL = 'YOUR_SANITY_API_URL'  # URL that produces all launch information
-VESTABOARD_API_KEY = 'YOUR_VESTABOARD_API_KEY'
+SANITY_API_URL = os.getenv('SANITY_API_URL')
+VESTABOARD_API_KEY = os.getenv('VESTABOARD_API_KEY')
 
 # Function to fetch all launch information from Sanity
 def fetch_all_launches():
