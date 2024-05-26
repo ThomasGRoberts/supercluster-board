@@ -12,6 +12,8 @@ VESTABOARD_API_KEY = os.getenv('VESTABOARD_API_KEY')
 def fetch_all_launches():
     response = requests.get(SANITY_API_URL)
     if response.status_code == 200:
+        print("Successfully fetched data from Sanity API")
+        print("API Response:", response.text)  # Print the raw API response for debugging
         return response.json()['result']
     else:
         print("Failed to fetch data from Sanity API")
