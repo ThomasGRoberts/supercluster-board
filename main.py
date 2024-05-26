@@ -2,9 +2,11 @@ import requests
 import json
 import datetime
 
-# Environment variables (set these in your GitHub Secrets)
-SANITY_API_URL = 'YOUR_SANITY_API_URL'  # URL that produces all launch information
-VESTABOARD_API_KEY = 'YOUR_VESTABOARD_API_KEY'
+# Environment variables (these should be set in your GitHub Secrets)
+import os
+
+SANITY_API_URL = os.getenv('SANITY_API_URL')
+VESTABOARD_API_KEY = os.getenv('VESTABOARD_API_KEY')
 
 # Function to fetch all launch information from Sanity
 def fetch_all_launches():
@@ -67,13 +69,16 @@ def send_to_vestaboard(message_layout):
 
 # Main script execution
 if __name__ == "__main__":
-    launches = fetch_all_launches()
-    most_recent_launch = get_most_recent_launch(launches)
-    if most_recent_launch:
-        description = format_launch_description(most_recent_launch)
-        print(f"Launch description: {description}")  # Print the launch description for debugging
-        message_layout = create_vestaboard_message(description)
-        print(f"Message layout: {message_layout}")  # Print the message layout for debugging
-        send_to_vestaboard(message_layout)
+    if not SANITY_API_URL or not VESTABOARD_API_KEY:
+        print("Environment variables SANITY_API_URL and VESTABOARD_API_KEY must be set")
     else:
-        print("No launch data available.")
+        launches = fetch_all_launches()
+        most_recent_launch = get_most_recent_launch(launches)
+        if most_recent_launch:
+            description = format_launch_description(most_recent_launch)
+            print(f"Launch description: {description}")  # Print the launch description for debugging
+            message_layout = create_vestaboard_message(description)
+            print(f"Message layout: {message_layout}")  # Print the message layout for debugging
+            send_to_vestaboard(message_layout)
+        else:
+            print("No launch data available.")
