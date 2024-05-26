@@ -52,6 +52,7 @@ def create_vestaboard_message(description):
             line_chars = [CHARACTER_CODES.get(char, 0) for char in line]  # Convert characters to Vestaboard codes
             line_length = len(line_chars)
             start_col = (22 - line_length) // 2  # Center-align
+            print(f"Line {i+1}: {line_chars}, Length: {line_length}, Start Column: {start_col}")
             message_layout[start_row + i][start_col:start_col + line_length] = line_chars
 
     return message_layout
@@ -78,9 +79,4 @@ if __name__ == "__main__":
         most_recent_launch = get_most_recent_launch(launches)
         if most_recent_launch:
             description = format_launch_description(most_recent_launch)
-            message_layout = create_vestaboard_message(description)
-            send_to_vestaboard(message_layout)
-        else:
-            print("No launch data available.")
-    else:
-        print("No launch data available.")
+            message_layout
