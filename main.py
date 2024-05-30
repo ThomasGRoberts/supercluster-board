@@ -61,15 +61,14 @@ def create_vestaboard_message(description):
             current_line_length += word_length + 1  # +1 for the space
         else:
             # Calculate the number of spaces needed to center-align the line
-            num_spaces = (22 - current_line_length + 1) // 2
+            line = ' '.join(current_row)
+            num_spaces = (22 - len(line)) // 2
 
             # Place the current row on the board with centered alignment
             start_index = num_spaces
-            for i, word in enumerate(current_row):
-                if start_index + len(word) <= 22:
-                    for j, char in enumerate(word):
-                        message_layout[row_index][start_index + j] = char_to_code.get(char, 0)
-                    start_index += len(word) + 1  # +1 for the space
+            for i, char in enumerate(line):
+                if start_index + i < 22:  # Ensure no overflow
+                    message_layout[row_index][start_index + i] = char_to_code.get(char, 0)
             # Move to the next row
             row_index += 1
             if row_index >= 6:  # Vestaboard has only 6 rows
@@ -80,15 +79,13 @@ def create_vestaboard_message(description):
     
     # Add any remaining words in the current row
     if row_index < 6:
-        # Calculate the number of spaces needed to center-align the line
-        num_spaces = (22 - current_line_length + 1) // 2
+        line = ' '.join(current_row)
+        num_spaces = (22 - len(line)) // 2
         
         start_index = num_spaces
-        for word in current_row:
-            if start_index + len(word) <= 22:
-                for j, char in enumerate(word):
-                    message_layout[row_index][start_index + j] = char_to_code.get(char, 0)
-                start_index += len(word) + 1  # +1 for the space
+        for i, char in enumerate(line):
+            if start_index + i < 22:
+                message_layout[row_index][start_index + i] = char_to_code.get(char, 0)
     
     # Add yellow tile in the bottom-right-hand corner (character code 65)
     message_layout[-1][-1] = 65
