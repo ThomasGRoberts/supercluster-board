@@ -50,7 +50,7 @@ def create_vestaboard_message(description):
     current_row = []
     current_line_length = 0
 
-    row_index = 0
+    temp_message_layout = []
 
     for word in words:
         word_length = len(word)
@@ -64,29 +64,44 @@ def create_vestaboard_message(description):
             line = ' '.join(current_row)
             num_spaces = (22 - len(line)) // 2
 
-            # Place the current row on the board with centered alignment
+            # Place the current row on the temp board with centered alignment
+            temp_row = [0] * 22
             start_index = num_spaces
             for i, char in enumerate(line):
                 if start_index + i < 22:  # Ensure no overflow
-                    message_layout[row_index][start_index + i] = char_to_code.get(char, 0)
-            # Move to the next row
-            row_index += 1
-            if row_index >= 6:  # Vestaboard has only 6 rows
-                break
+                    temp_row[start_index + i] = char_to_code.get(char, 0)
+            temp_message_layout.append(temp_row)
+
             # Start the new row with the current word
             current_row = [word]
             current_line_length = word_length + 1
     
     # Add any remaining words in the current row
-    if row_index < 6:
+    if current_row:
         line = ' '.join(current_row)
         num_spaces = (22 - len(line)) // 2
-        
+        temp_row = [0] * 22
         start_index = num_spaces
         for i, char in enumerate(line):
             if start_index + i < 22:
-                message_layout[row_index][start_index + i] = char_to_code.get(char, 0)
-    
+                temp_row[start_index + i] = char_to_code.get(char, 0)
+        temp_message_layout.append(temp_row)
+
+    # Determine the starting row based on the number of rows in temp_message_layout
+    num_rows = len(temp_message_layout)
+    start_row = 0
+
+    if num_rows == 1 or num_rows == 2:
+        start_row = 2
+    elif num_rows == 3 or num_rows == 4:
+        start_row = 1
+    elif num_rows == 5 or num_rows == 6:
+        start_row = 0
+
+    # Copy temp_message_layout to message_layout starting from start_row
+    for i in range(num_rows):
+        message_layout[start_row + i] = temp_message_layout[i]
+
     # Add yellow tile in the bottom-right-hand corner (character code 65)
     message_layout[-1][-1] = 65
 
