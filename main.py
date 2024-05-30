@@ -84,7 +84,7 @@ def create_vestaboard_message(description):
         num_spaces = (22 - current_line_length + 1) // 2
         
         start_index = num_spaces
-        for i, word in enumerate(current_row):
+        for word in current_row:
             if start_index + len(word) <= 22:
                 for j, char in enumerate(word):
                     message_layout[row_index][start_index + j] = char_to_code.get(char, 0)
@@ -112,4 +112,13 @@ def send_to_vestaboard(message_layout):
 
 # Main script execution
 if not SANITY_API_URL or not VESTABOARD_API_KEY:
-    print("Environment variables SANITY_API_URL and VESTABOARD_API_KEY must be
+    print("Environment variables SANITY_API_URL and VESTABOARD_API_KEY must be set.")
+else:
+    launches = fetch_all_launches()
+    most_recent_launch = get_most_recent_launch(launches)
+    if most_recent_launch:
+        description = format_launch_description(most_recent_launch)
+        message_layout = create_vestaboard_message(description)
+        send_to_vestaboard(message_layout)
+    else:
+        print("No launches found.")
