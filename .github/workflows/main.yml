@@ -2,7 +2,10 @@ name: update-vestaboard
 
 on:
   schedule:
-    - cron: '5,25,45 12-21 * * *' # Every 20 minutes from 8 am to 6 pm EDT (12 pm to 10 pm UTC)
+    - cron: '0 * * * *'   # At the top of the hour
+    - cron: '20 * * * *'  # At 20 minutes past the hour
+    - cron: '40 * * * *'  # At 40 minutes past the hour
+  workflow_dispatch:
 
 jobs:
   update-vestaboard:
